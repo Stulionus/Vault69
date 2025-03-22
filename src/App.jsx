@@ -1,51 +1,37 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+	return (
+		<>
+			<head>
+				<title>Fallout Terminal-Hacking</title>
+			</head>
+			<div id="terminal-background">
+				<img
+					id="terminal-background-off"
+					src="/images/monitorborder-off.png"
+					alt="Monitor Border Off"
+				/>
+			</div>
+			<div id="terminal"></div>
+			<div id="powerbutton" onClick={() => window.TogglePower?.()}></div>
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+			<div id="power-audio">
+				<audio id="poweron" src="/sound/poweron.ogg" />
+				<audio id="poweroff" src="/sound/poweroff.ogg" />
+				<audio id="passbad" src="/sound/passbad.ogg" />
+				<audio id="passgood" src="/sound/passgood.ogg" />
+			</div>
 
-  return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
-  );
+			<div id="audio-map">
+				<audio id="enter" src="/sound/kenter.ogg" />
+				{[...Array(10)].map((_, i) => (
+					<audio key={i + 1} id={`k${i + 1}`} src={`/sound/k${i + 1}.ogg`} />
+				))}
+			</div>
+		</>
+	);
 }
 
 export default App;
