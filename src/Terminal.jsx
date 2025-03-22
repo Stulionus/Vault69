@@ -39,6 +39,13 @@ const TerminalGame = () => {
 		if (el && soundEnabled) el.play();
 	};
 
+	const playRandomSound = () => {
+		const keys = ["k1", "k2", "k3", "k4", "k5", "k6", "k7", "k8", "k9", "k10"];
+		const id = keys[Math.floor(Math.random() * keys.length)];
+		const el = document.getElementById(id);
+		if (el && soundEnabled) el.play();
+	};
+
 	const togglePower = () => {
 		setPower((prev) => !prev);
 		playSound(power ? "poweroff" : "poweron");
@@ -213,7 +220,10 @@ const TerminalGame = () => {
 						onMouseEnter={() =>
 							item?.type === "word" && setHoverWord(item.word)
 						}
-						onMouseLeave={() => setHoverWord(null)}
+						onMouseLeave={() => {
+							setHoverWord(null);
+							playRandomSound();
+						}}
 					>
 						{item?.char || "."}
 					</span>
