@@ -28,7 +28,7 @@ const TerminalGame = () => {
 	const [soundEnabled] = useState(true);
 	const [consoleText, setConsoleText] = useState("");
 	const terminalRef = useRef();
-	const [hoverIndex, setHoverIndex] = useState(null);
+	const [hoverWord, setHoverWord] = useState(null);
 
 	useEffect(() => {
 		if (power) initializeTerminal();
@@ -91,7 +91,6 @@ const TerminalGame = () => {
 						char: wordsHalf[i][j],
 						type: "word",
 						word: wordsHalf[i],
-						partOf: i,
 					};
 				}
 			}
@@ -143,7 +142,7 @@ const TerminalGame = () => {
 		return nodes;
 	};
 
-	const handleCharClick = (item, index, columnKey) => {
+	const handleCharClick = (item) => {
 		if (attempts <= 0) return;
 		if (item.type === "word") {
 			playSound("enter");
@@ -196,25 +195,25 @@ const TerminalGame = () => {
 		terminalRef.current.innerHTML = `<div id='adminalert'><div id='msg' class='character-hover alert-text'>TERMINAL ACCESS GRANTED</div><br /><div onClick="location.href = 'https://breakout.bernis-hideout.de/pip-boy';return false;" id='proceed' class='alert-text'>PRESS HERE TO PROCEED</div></div>`;
 	};
 
-	const renderColumn = (columnData, columnKey) => {
+	const renderColumn = (columnData) => {
 		const rows = [];
 		for (let row = 0; row < columnHeight; row++) {
 			const cells = [];
 			for (let col = 0; col < wordColumnWidth; col++) {
 				const index = row * wordColumnWidth + col;
 				const item = columnData[index];
-				const isHovered = item?.type === "word" && item.partOf === hoverIndex;
+				const isHovered = item?.type === "word" && item.word === hoverWord;
 				cells.push(
 					<span
 						key={index}
 						className={`character ${item?.type || ""} ${
 							isHovered ? "character-hover" : ""
 						}`}
-						onClick={() => item && handleCharClick(item, index, columnKey)}
+						onClick={() => item && handleCharClick(item)}
 						onMouseEnter={() =>
-							item?.type === "word" && setHoverIndex(item.partOf)
+							item?.type === "word" && setHoverWord(item.word)
 						}
-						onMouseLeave={() => setHoverIndex(null)}
+						onMouseLeave={() => setHoverWord(null)}
 					>
 						{item?.char || "."}
 					</span>
@@ -227,66 +226,65 @@ const TerminalGame = () => {
 
 	return (
 		<div className="terminal-container">
-			<div
-				id="terminal-background-off"
-				style={{ visibility: power ? "hidden" : "visible" }}
-			>
-				<img src="/images/monitorborder-off.png" alt="Monitor Off" />
+			<div className="terminal-wrapper">
+				<img
+					className="terminal-border"
+					src="/images/monitorborder-off.png"
+					alt="Monitor Off"
+				/>
+				<div
+					id="terminal"
+					style={{
+						backgroundImage: `url(${
+							power ? "/images/bg.png" : "/images/bg-off.png"
+						})`,
+					}}
+				>
+					{power && (
+						<div id="terminal-interior" ref={terminalRef}>
+							<div id="info">
+								{outputLines.map((line, idx) => (
+									<div key={idx} dangerouslySetInnerHTML={{ __html: line }} />
+								))}
+							</div>
+							<div id="attempts">
+								{attempts} ATTEMPT(S) LEFT: {"█".repeat(attempts)}
+							</div>
+							<div id="column1" className="column pointers">
+								{Array.from({ length: columnHeight }).map((_, i) => (
+									<div key={i}>
+										{"0x" +
+											Math.floor(Math.random() * 65536)
+												.toString(16)
+												.toUpperCase()
+												.padStart(4, "0")}
+									</div>
+								))}
+							</div>
+							<div id="column2" className="column words">
+								{renderColumn(wordGrid.column2)}
+							</div>
+							<div id="column3" className="column pointers">
+								{Array.from({ length: columnHeight }).map((_, i) => (
+									<div key={i}>
+										{"0x" +
+											Math.floor(Math.random() * 65536)
+												.toString(16)
+												.toUpperCase()
+												.padStart(4, "0")}
+									</div>
+								))}
+							</div>
+							<div id="column4" className="column words">
+								{renderColumn(wordGrid.column4)}
+							</div>
+							<div id="output"></div>
+							<div id="console">{consoleText}▊</div>
+						</div>
+					)}
+				</div>
+				<div id="powerbutton" onClick={togglePower}></div>
 			</div>
-
-			<div
-				id="terminal"
-				style={{
-					backgroundImage: `url(${
-						power ? "/images/bg.png" : "/images/bg-off.png"
-					})`,
-				}}
-			>
-				{power && (
-					<div id="terminal-interior" ref={terminalRef}>
-						<div id="info">
-							{outputLines.map((line, idx) => (
-								<div key={idx} dangerouslySetInnerHTML={{ __html: line }} />
-							))}
-						</div>
-						<div id="attempts">
-							{attempts} ATTEMPT(S) LEFT: {"█".repeat(attempts)}
-						</div>
-						<div id="column1" className="column pointers">
-							{Array.from({ length: columnHeight }).map((_, i) => (
-								<div key={i}>
-									{"0x" +
-										Math.floor(Math.random() * 65536)
-											.toString(16)
-											.toUpperCase()
-											.padStart(4, "0")}
-								</div>
-							))}
-						</div>
-						<div id="column2" className="column words">
-							{renderColumn(wordGrid.column2, "column2")}
-						</div>
-						<div id="column3" className="column pointers">
-							{Array.from({ length: columnHeight }).map((_, i) => (
-								<div key={i}>
-									{"0x" +
-										Math.floor(Math.random() * 65536)
-											.toString(16)
-											.toUpperCase()
-											.padStart(4, "0")}
-								</div>
-							))}
-						</div>
-						<div id="column4" className="column words">
-							{renderColumn(wordGrid.column4, "column4")}
-						</div>
-						<div id="output"></div>
-						<div id="console">{consoleText}▊</div>
-					</div>
-				)}
-			</div>
-
-			<div id="powerbutton" onClick={togglePower}></div>
 		</div>
 	);
 };
