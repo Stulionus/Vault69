@@ -1,5 +1,8 @@
+@import "tailwindcss";
+
 body {
 	height: 100%;
+	width: 100%;
 	background-color: #000;
 }
 
@@ -23,8 +26,11 @@ canvas {
 	z-index: 10;
 	position: absolute;
 	left: 50%;
-	margin-left: -375px;
-	top: 87px;
+}
+
+.terminal-border {
+	position: absolute;
+	z-index: 10;
 }
 
 #terminal-background {
@@ -33,20 +39,13 @@ canvas {
 	height: 100%;
 	z-index: -20;
 	margin: 0 auto;
-	position: relative;
 }
 
 #terminal-background-off {
-	position: relative;
 	margin: 0;
 	visibility: visible;
-}
-
-#terminal-interior {
-	position: relative;
 	width: 100%;
 	height: 100%;
-	z-index: 11;
 }
 
 .column {
@@ -86,7 +85,7 @@ canvas {
 }
 
 #output {
-	width: 187px;
+	width: fit-content;
 	height: 300px;
 	letter-spacing: 3px;
 	float: left;

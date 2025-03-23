@@ -1,20 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./App.css";
+import _ from "lodash";
+import * as settings from "./settings.js";
 
-const columnHeight = 17;
-const wordColumnWidth = 12;
-const Count = 12;
-const Difficulty = 7;
-const DudLength = 8;
-const Haikus = [
-	"Out of memory.<br />We wish to hold the whole sky,<br />But we never will.",
-	"Three things are certain:<br />Death, taxes, and lost data.<br />Guess which has occurred.",
-	"wind catches lily<br />scatt'ring petals to the wind:<br />segmentation fault",
-	"The fence is for you<br />To protect you from danger<br />Don't go past the fence",
-	"Joe Roquefort: hero<br />of cryptanalysis in<br />the Second World War.",
-	"Math gurus showed us<br />some hash weaknesses. Panic<br />ensues. New hash now!",
-	"Two thousand seven,<br />NIST says 'New hash contest now!'<br />Five years later, done.",
-];
+const columnHeight = settings.columnHeight;
+const wordColumnWidth = settings.wordColumnWidth;
+const Difficulty = settings.difficulty;
+const DudLength = settings.dudLength;
+const Haikus = settings.haikus;
+
 const BracketSets = ["<>", "[]", "{}", "()"];
 const gchars = "'|\"!@#$%^&*-_+=.;:?,/".split("");
 
@@ -29,10 +23,31 @@ const TerminalGame = () => {
 	const [consoleText, setConsoleText] = useState("");
 	const terminalRef = useRef();
 	const [hoverWord, setHoverWord] = useState(null);
+	const [hoverChar, setHoverChar] = useState(null);
+	const [hexColumnOne, setHexColumnOne] = useState([]);
+	const [hexColumnThree, setHexColumnThree] = useState([]);
+	const [haiku, setHaiku] = useState(
+		Haikus[Math.floor(Math.random() * Haikus.length)]
+	);
 
 	useEffect(() => {
 		if (power) initializeTerminal();
 	}, [power]);
+
+	useEffect(() => {
+		const generateHex = () =>
+			Array.from(
+				{ length: columnHeight },
+				() =>
+					"0x" +
+					Math.floor(Math.random() * 65536)
+						.toString(16)
+						.toUpperCase()
+						.padStart(4, "0")
+			);
+		setHexColumnOne(generateHex());
+		setHexColumnThree(generateHex());
+	}, []);
 
 	const playSound = (id) => {
 		const el = document.getElementById(id);
@@ -53,11 +68,8 @@ const TerminalGame = () => {
 
 	const initializeTerminal = () => {
 		setAttempts(6);
-		setOutputLines([
-			"> ROBCO INDUSTRIES (TM) TERMALINK PROTOCOL",
-			"> ENTER PASSWORD NOW",
-		]);
-		const mockWords = [
+		setOutputLines(["> CONUNDROOM INDUSTRIES (TM)", "> ENTER PASSWORD NOW"]);
+		const wordList = [
 			"VESPER",
 			"BEWITCH",
 			"RECHECK",
@@ -71,7 +83,7 @@ const TerminalGame = () => {
 			"TESTACY",
 			"BUSIEST",
 		];
-		const shuffled = shuffle(mockWords);
+		const shuffled = shuffle(wordList);
 		setWords(shuffled);
 		setCorrectWord(shuffled[0]);
 		buildWordColumns(shuffled);
@@ -161,7 +173,7 @@ const TerminalGame = () => {
 				updateOutput("while system");
 				updateOutput("is accessed.");
 				setAttempts(0);
-				renderSuccess();
+				gameWin();
 			} else {
 				playSound("passbad");
 				updateOutput("Access denied");
@@ -172,7 +184,7 @@ const TerminalGame = () => {
 				);
 				const newAttempts = attempts - 1;
 				setAttempts(newAttempts);
-				if (newAttempts === 0) renderFailure();
+				if (newAttempts === 0) gameLoss();
 			}
 		} else if (item.type === "dudcap") {
 			playSound("enter");
@@ -192,36 +204,55 @@ const TerminalGame = () => {
 		return first.split("").filter((c, i) => c === second[i]).length;
 	};
 
-	const renderFailure = () => {
+	const gameLoss = () => {
 		if (!terminalRef.current) return;
 		terminalRef.current.innerHTML = `<div id='adminalert'><div class='character-hover alert-text'>TERMINAL LOCKED</div><br />PLEASE CONTACT AN ADMINISTRATOR</div>`;
 	};
 
-	const renderSuccess = () => {
+	const gameWin = () => {
 		if (!terminalRef.current) return;
 		terminalRef.current.innerHTML = `<div id='adminalert'><div id='msg' class='character-hover alert-text'>TERMINAL ACCESS GRANTED</div><br /><div onClick="location.href = 'https://breakout.bernis-hideout.de/pip-boy';return false;" id='proceed' class='alert-text'>PRESS HERE TO PROCEED</div></div>`;
 	};
 
+	let renderCallCount = 0;
 	const renderColumn = (columnData) => {
+		renderCallCount++;
+		const columnId = `column${renderCallCount}`;
 		const rows = [];
 		for (let row = 0; row < columnHeight; row++) {
 			const cells = [];
 			for (let col = 0; col < wordColumnWidth; col++) {
 				const index = row * wordColumnWidth + col;
 				const item = columnData[index];
-				const isHovered = item?.type === "word" && item.word === hoverWord;
+
+				const isHoveredWord =
+					item?.type === "word" &&
+					hoverWord?.word === item.word &&
+					hoverWord?.column === columnId;
+				const isHoveredChar =
+					item?.type !== "word" &&
+					hoverChar?.index === index &&
+					hoverChar?.column === columnId;
+
 				cells.push(
 					<span
 						key={index}
 						className={`character ${item?.type || ""} ${
-							isHovered ? "character-hover" : ""
+							isHoveredWord || isHoveredChar ? "character-hover" : ""
 						}`}
 						onClick={() => item && handleCharClick(item)}
-						onMouseEnter={() =>
-							item?.type === "word" && setHoverWord(item.word)
-						}
+						onMouseEnter={() => {
+							if (item?.type === "word") {
+								setHoverWord({ word: item.word, column: columnId });
+								setHoverChar(null);
+							} else {
+								setHoverChar({ index, column: columnId });
+								setHoverWord(null);
+							}
+						}}
 						onMouseLeave={() => {
 							setHoverWord(null);
+							setHoverChar(null);
 							playRandomSound();
 						}}
 					>
@@ -235,15 +266,15 @@ const TerminalGame = () => {
 	};
 
 	return (
-		<div className="terminal-container">
-			<div className="terminal-wrapper">
+		<div className="relative w-screen h-screen overflow-hidden font-semibold bg-black text-green-400 font-mono text-[1.2rem]">
+			<div className="absolute inset-0 flex items-center justify-center">
 				<img
-					className="terminal-border"
+					className="absolute w-full h-full object-cover z-0"
 					src="/images/monitorborder-off.png"
 					alt="Monitor Off"
 				/>
 				<div
-					id="terminal"
+					className="z-11 w-full h-full bg-no-repeat bg-cover justify-center items-center gap-x-8 gap-y-3 p-40"
 					style={{
 						backgroundImage: `url(${
 							power ? "/images/bg.png" : "/images/bg-off.png"
@@ -251,49 +282,50 @@ const TerminalGame = () => {
 					}}
 				>
 					{power && (
-						<div id="terminal-interior" ref={terminalRef}>
-							<div id="info">
-								{outputLines.map((line, idx) => (
-									<div key={idx} dangerouslySetInnerHTML={{ __html: line }} />
-								))}
+						<>
+							<div className="col-span-2">
+								<div dangerouslySetInnerHTML={{ __html: haiku }} />
+								PASSWORD REQUIRED.
 							</div>
-							<div id="attempts">
-								{attempts} ATTEMPT(S) LEFT: {"█".repeat(attempts)}
+
+							<div className="col-span-2">
+								{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
 							</div>
-							<div id="column1" className="column pointers">
-								{Array.from({ length: columnHeight }).map((_, i) => (
-									<div key={i}>
-										{"0x" +
-											Math.floor(Math.random() * 65536)
-												.toString(16)
-												.toUpperCase()
-												.padStart(4, "0")}
+							<div className="fl">
+								<div className="w-full flex flex-row space-x-10">
+									<div>
+										{hexColumnOne.map((hex, i) => (
+											<div key={i}>{hex}</div>
+										))}
 									</div>
-								))}
-							</div>
-							<div id="column2" className="column words">
-								{renderColumn(wordGrid.column2)}
-							</div>
-							<div id="column3" className="column pointers">
-								{Array.from({ length: columnHeight }).map((_, i) => (
-									<div key={i}>
-										{"0x" +
-											Math.floor(Math.random() * 65536)
-												.toString(16)
-												.toUpperCase()
-												.padStart(4, "0")}
+
+									<div>{renderColumn(wordGrid.column2)}</div>
+
+									<div>
+										{hexColumnThree.map((hex, i) => (
+											<div key={i}>{hex}</div>
+										))}
 									</div>
-								))}
+
+									<div>{renderColumn(wordGrid.column4)}</div>
+
+									<div className="col-span-2 space-y-1">
+										{outputLines.map((line, i) => (
+											<div key={i}>{line}</div>
+										))}
+									</div>
+								</div>
+								<div className="col-span-2 tracking-wider overflow-y-scroll">
+									{consoleText}▊
+								</div>
 							</div>
-							<div id="column4" className="column words">
-								{renderColumn(wordGrid.column4)}
-							</div>
-							<div id="output"></div>
-							<div id="console">{consoleText}▊</div>
-						</div>
+						</>
 					)}
 				</div>
-				<div id="powerbutton" onClick={togglePower}></div>
+				<div
+					className="absolute w-[54px] h-[50px] bottom-10 left-1/2 -translate-x-1/2 cursor-pointer z-20"
+					onClick={togglePower}
+				/>
 			</div>
 		</div>
 	);

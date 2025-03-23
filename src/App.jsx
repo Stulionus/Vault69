@@ -6,6 +6,7 @@ function App() {
 	return (
 		<>
 			<head>
+				<link href="/src/App.css" rel="stylesheet"></link>
 				<title>Fallout Terminal-Hacking</title>
 			</head>
 			<div id="power-audio">
