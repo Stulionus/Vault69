@@ -1,9 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import _ from "lodash";
 import * as settings from "./settings.js";
-import { Win } from "./Win";
-import { Loss } from "./Loss";
 
 /**
  * @description Settings imported from settings.js
@@ -14,6 +12,7 @@ const wordList = settings.wordList;
 const Difficulty = settings.difficulty;
 const DudLength = settings.dudLength;
 const Haikus = settings.haikus;
+const Attempts = settings.attempts;
 
 /**
  * @description assorted consts
@@ -24,7 +23,7 @@ const gchars = "'|\"!@#$%^&*-_+=.;:?,/".split("");
 const TerminalGame = () => {
 	// #region States
 	const [power, setPower] = useState(false);
-	const [attempts, setAttempts] = useState(6);
+	const [attempts, setAttempts] = useState(Attempts);
 	const [correctWord, setCorrectWord] = useState("");
 	const [words, setWords] = useState([]);
 	const [outputLines, setOutputLines] = useState([]);
@@ -86,7 +85,7 @@ const TerminalGame = () => {
 	};
 
 	const initializeTerminal = () => {
-		setAttempts(6);
+		setAttempts(attempts);
 		setOutputLines(["> CONUNDROOM INDUSTRIES (TM)", "> ENTER PASSWORD NOW"]);
 		const shuffled = shuffle(wordList);
 		setWords(shuffled);
@@ -291,42 +290,60 @@ const TerminalGame = () => {
 						>
 							{power && (
 								<>
-									<div className="col-span-2">
-										<div dangerouslySetInnerHTML={{ __html: haiku }} />
-										PASSWORD REQUIRED.
-									</div>
-
-									<div className="col-span-2">
-										{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
-									</div>
-									<div className="fl">
-										<div className="w-full flex flex-row space-x-10">
-											<div>
-												{hexColumnOne.map((hex, i) => (
-													<div key={i}>{hex}</div>
-												))}
+									{gameState === "playing" && (
+										<>
+											<div className="col-span-2">
+												<div dangerouslySetInnerHTML={{ __html: haiku }} />
+												PASSWORD REQUIRED.
 											</div>
 
-											<div>{renderColumn(wordGrid.column2)}</div>
-
-											<div>
-												{hexColumnThree.map((hex, i) => (
-													<div key={i}>{hex}</div>
-												))}
+											<div className="col-span-2">
+												{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
 											</div>
+											<div className="fl">
+												<div className="w-full flex flex-row space-x-10">
+													<div>
+														{hexColumnOne.map((hex, i) => (
+															<div key={i}>{hex}</div>
+														))}
+													</div>
 
-											<div>{renderColumn(wordGrid.column4)}</div>
+													<div>{renderColumn(wordGrid.column2)}</div>
 
-											<div className="col-span-2 space-y-1">
-												{outputLines.map((line, i) => (
-													<div key={i}>{line}</div>
-												))}
+													<div>
+														{hexColumnThree.map((hex, i) => (
+															<div key={i}>{hex}</div>
+														))}
+													</div>
+
+													<div>{renderColumn(wordGrid.column4)}</div>
+
+													<div className="col-span-2 space-y-1">
+														{outputLines.map((line, i) => (
+															<div key={i}>{line}</div>
+														))}
+													</div>
+												</div>
+												<div className="col-span-2 tracking-wider overflow-y-scroll">
+													{consoleText}▊
+												</div>
+											</div>
+										</>
+									)}
+									{gameState === "win" && (
+										<div className="flex flex-col w-full">
+											<div className="text-center">ACCESS GRANTED</div>
+											<div className="text-center">PASSWORD IS: 69</div>
+										</div>
+									)}
+									{gameState === "loss" && (
+										<div className="flex flex-col w-full">
+											<div className="text-center">TERMINAL LOCKED</div>
+											<div className="text-center">
+												PLEASE CONTACT AN ADMINISTRATOR
 											</div>
 										</div>
-										<div className="col-span-2 tracking-wider overflow-y-scroll">
-											{consoleText}▊
-										</div>
-									</div>
+									)}
 								</>
 							)}
 						</div>
@@ -337,8 +354,6 @@ const TerminalGame = () => {
 					</div>
 				</div>
 			)}
-			{gameState === "win" && <Win />}
-			{gameState === "loss" && <Loss />}
 		</>
 	);
 	// #endregion
