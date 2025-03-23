@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./App.css";
 import _ from "lodash";
 import * as settings from "./settings.js";
@@ -42,6 +42,8 @@ const TerminalGame = () => {
 	);
 	const [gameState, setGameState] = useState("playing");
 	const [showPowerUpFx, setShowPowerUpFx] = useState(false);
+	const typingRef = useRef(false);
+	const typingQueue = useRef([]);
 
 	// #endregion
 
@@ -105,9 +107,46 @@ const TerminalGame = () => {
 	};
 
 	const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
-
 	const updateOutput = (text) => {
-		setOutputLines((prev) => [...prev.slice(-columnHeight + 2), `> ${text}`]);
+		typingQueue.current.push(`> ${text}`);
+		if (!typingRef.current) {
+			processTypingQueue();
+		}
+	};
+
+	const processTypingQueue = () => {
+		if (typingQueue.current.length === 0) {
+			typingRef.current = false;
+			return;
+		}
+
+		typingRef.current = true;
+		const line = typingQueue.current.shift();
+		let index = 0;
+		let typedLine = "";
+
+		const typeNext = () => {
+			if (index < line.length) {
+				typedLine += line[index];
+				setOutputLines((prev) => [
+					...prev.slice(-columnHeight + 2, prev.length - 1),
+					typedLine,
+				]);
+				playRandomSound();
+				index++;
+				setTimeout(typeNext, 25 + Math.random() * 25); // typing speed
+			} else {
+				setOutputLines((prev) => [
+					...prev.slice(-columnHeight + 2, prev.length - 1),
+					typedLine,
+				]);
+				setTimeout(processTypingQueue, 200);
+			}
+		};
+
+		setOutputLines((prev) => [...prev.slice(-columnHeight + 2), ""]);
+
+		typeNext();
 	};
 
 	const buildWordColumns = (wordList) => {
@@ -343,10 +382,11 @@ const TerminalGame = () => {
 													{outputLines.map((line, i) => (
 														<div key={i}>{line}</div>
 													))}
+													<div className="w-fit h-fit flex items-center gap-x-3">
+														<span className="text-green-400">{">"}</span>
+														<span className="inline-block w-[1ch] h-[1.1em] bg-green-400 animate-blink" />
+													</div>
 												</div>
-											</div>
-											<div className="col-span-2 tracking-wider overflow-y-scroll">
-												{consoleText}▊
 											</div>
 										</div>
 									</>
