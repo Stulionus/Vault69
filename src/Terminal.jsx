@@ -85,7 +85,7 @@ const TerminalGame = () => {
 	};
 
 	const initializeTerminal = () => {
-		setAttempts(attempts);
+		setAttempts(Attempts);
 		setOutputLines(["> CONUNDROOM INDUSTRIES (TM)", "> ENTER PASSWORD NOW"]);
 		const shuffled = shuffle(wordList);
 		setWords(shuffled);
@@ -187,8 +187,9 @@ const TerminalGame = () => {
 					} correct.`
 				);
 
-				setAttempts(attempts - 1);
-				if (attempts === 0) gameLoss();
+				const newAttempts = attempts - 1;
+				setAttempts(newAttempts);
+				if (newAttempts === 0) gameLoss();
 			}
 		} else if (item.type === "dudcap") {
 			playSound("enter");
@@ -272,88 +273,96 @@ const TerminalGame = () => {
 	// #region Render
 	return (
 		<>
-			{gameState === "playing" && (
-				<div className="relative w-screen h-screen overflow-hidden font-semibold bg-black text-green-400 font-mono text-[1.2rem]">
-					<div className="absolute inset-0 flex items-center justify-center">
-						<img
-							className="absolute w-full h-full object-cover z-0"
-							src="/images/monitorborder-off.png"
-							alt="Monitor Off"
-						/>
-						<div
-							className="z-11 w-full h-full bg-no-repeat bg-cover justify-center items-center gap-x-8 gap-y-3 p-40"
-							style={{
-								backgroundImage: `url(${
-									power ? "/images/bg.png" : "/images/bg-off.png"
-								})`,
-							}}
-						>
-							{power && (
-								<>
-									{gameState === "playing" && (
-										<>
-											<div className="col-span-2">
-												<div dangerouslySetInnerHTML={{ __html: haiku }} />
-												PASSWORD REQUIRED.
-											</div>
+			<div className="relative w-screen h-screen overflow-hidden font-semibold bg-black text-green-400 font-mono text-[1.2rem]">
+				<div className="absolute inset-0 flex items-center justify-center">
+					<img
+						className="absolute w-full h-full object-cover z-0"
+						src="/images/monitorborder-off.png"
+						alt="Monitor Off"
+					/>
+					<div
+						className="z-11 w-full h-full bg-no-repeat bg-cover justify-center items-center gap-x-8 gap-y-3 p-40"
+						style={{
+							backgroundImage: `url(${
+								power ? "/images/bg.png" : "/images/bg-off.png"
+							})`,
+						}}
+					>
+						{power && (
+							<div
+								style={{ textShadow: "0 0 5px #00ff0080, 0 0 10px #00ff0080" }}
+							>
+								{gameState === "playing" && (
+									<>
+										<div className="col-span-2">
+											<div dangerouslySetInnerHTML={{ __html: haiku }} />
+											PASSWORD REQUIRED.
+										</div>
 
-											<div className="col-span-2">
-												{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
-											</div>
-											<div className="fl">
-												<div className="w-full flex flex-row space-x-10">
-													<div>
-														{hexColumnOne.map((hex, i) => (
-															<div key={i}>{hex}</div>
-														))}
-													</div>
-
-													<div>{renderColumn(wordGrid.column2)}</div>
-
-													<div>
-														{hexColumnThree.map((hex, i) => (
-															<div key={i}>{hex}</div>
-														))}
-													</div>
-
-													<div>{renderColumn(wordGrid.column4)}</div>
-
-													<div className="col-span-2 space-y-1">
-														{outputLines.map((line, i) => (
-															<div key={i}>{line}</div>
-														))}
-													</div>
+										<div className="col-span-2">
+											{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
+										</div>
+										<div className="fl">
+											<div className="w-full flex flex-row space-x-10">
+												<div>
+													{hexColumnOne.map((hex, i) => (
+														<div key={i}>{hex}</div>
+													))}
 												</div>
-												<div className="col-span-2 tracking-wider overflow-y-scroll">
-													{consoleText}▊
+
+												<div>{renderColumn(wordGrid.column2)}</div>
+
+												<div>
+													{hexColumnThree.map((hex, i) => (
+														<div key={i}>{hex}</div>
+													))}
+												</div>
+
+												<div>{renderColumn(wordGrid.column4)}</div>
+
+												<div className="col-span-2 space-y-1">
+													{outputLines.map((line, i) => (
+														<div key={i}>{line}</div>
+													))}
 												</div>
 											</div>
-										</>
-									)}
-									{gameState === "win" && (
-										<div className="flex flex-col w-full">
-											<div className="text-center">ACCESS GRANTED</div>
-											<div className="text-center">PASSWORD IS: 69</div>
-										</div>
-									)}
-									{gameState === "loss" && (
-										<div className="flex flex-col w-full">
-											<div className="text-center">TERMINAL LOCKED</div>
-											<div className="text-center">
-												PLEASE CONTACT AN ADMINISTRATOR
+											<div className="col-span-2 tracking-wider overflow-y-scroll">
+												{consoleText}▊
 											</div>
 										</div>
-									)}
-								</>
-							)}
-						</div>
-						<div
-							className="absolute w-[54px] h-[50px] bottom-10 left-1/2 -translate-x-1/2 cursor-pointer z-20"
-							onClick={togglePower}
-						/>
+									</>
+								)}
+								{gameState === "win" && (
+									<div
+										className="flex flex-col w-full text-center"
+										style={{
+											textShadow: "0 0 5px #00ff0080, 0 0 10px #00ff0080",
+										}}
+									>
+										<div>ACCESS GRANTED.</div>
+										<div>PASSWORD IS: 69.</div>
+									</div>
+								)}
+								{gameState === "loss" && (
+									<div
+										className="flex flex-col w-full text-center"
+										style={{
+											textShadow: "0 0 5px #00ff0080, 0 0 10px #00ff0080",
+										}}
+									>
+										<div>TERMINAL LOCKED.</div>
+										<div>PLEASE CONTACT AN ADMINISTRATOR.</div>
+									</div>
+								)}
+							</div>
+						)}
 					</div>
+					<div
+						className="absolute w-[54px] h-[50px] bottom-10 left-1/2 -translate-x-1/2 cursor-pointer z-20"
+						onClick={togglePower}
+					/>
 				</div>
-			)}
+			</div>
 		</>
 	);
 	// #endregion
