@@ -2,17 +2,27 @@ import React, { useEffect, useState, useRef } from "react";
 import "./App.css";
 import _ from "lodash";
 import * as settings from "./settings.js";
+import { Win } from "./Win";
+import { Loss } from "./Loss";
 
+/**
+ * @description Settings imported from settings.js
+ */
 const columnHeight = settings.columnHeight;
 const wordColumnWidth = settings.wordColumnWidth;
+const wordList = settings.wordList;
 const Difficulty = settings.difficulty;
 const DudLength = settings.dudLength;
 const Haikus = settings.haikus;
 
+/**
+ * @description assorted consts
+ */
 const BracketSets = ["<>", "[]", "{}", "()"];
 const gchars = "'|\"!@#$%^&*-_+=.;:?,/".split("");
 
 const TerminalGame = () => {
+	// #region States
 	const [power, setPower] = useState(false);
 	const [attempts, setAttempts] = useState(6);
 	const [correctWord, setCorrectWord] = useState("");
@@ -21,7 +31,7 @@ const TerminalGame = () => {
 	const [wordGrid, setWordGrid] = useState({ column2: [], column4: [] });
 	const [soundEnabled] = useState(true);
 	const [consoleText, setConsoleText] = useState("");
-	const terminalRef = useRef();
+	// const terminalRef = useRef();
 	const [hoverWord, setHoverWord] = useState(null);
 	const [hoverChar, setHoverChar] = useState(null);
 	const [hexColumnOne, setHexColumnOne] = useState([]);
@@ -29,6 +39,11 @@ const TerminalGame = () => {
 	const [haiku, setHaiku] = useState(
 		Haikus[Math.floor(Math.random() * Haikus.length)]
 	);
+	const [gameState, setGameState] = useState("playing");
+
+	// #endregion
+
+	//#region Effects
 
 	useEffect(() => {
 		if (power) initializeTerminal();
@@ -48,6 +63,10 @@ const TerminalGame = () => {
 		setHexColumnOne(generateHex());
 		setHexColumnThree(generateHex());
 	}, []);
+
+	// #endregion
+
+	// #region Functions
 
 	const playSound = (id) => {
 		const el = document.getElementById(id);
@@ -69,20 +88,6 @@ const TerminalGame = () => {
 	const initializeTerminal = () => {
 		setAttempts(6);
 		setOutputLines(["> CONUNDROOM INDUSTRIES (TM)", "> ENTER PASSWORD NOW"]);
-		const wordList = [
-			"VESPER",
-			"BEWITCH",
-			"RECHECK",
-			"STRETCH",
-			"BEDROCK",
-			"BEAKERS",
-			"BELEAPT",
-			"BEDWED",
-			"BESHAME",
-			"BEFRETS",
-			"TESTACY",
-			"BUSIEST",
-		];
 		const shuffled = shuffle(wordList);
 		setWords(shuffled);
 		setCorrectWord(shuffled[0]);
@@ -182,9 +187,9 @@ const TerminalGame = () => {
 						correctWord.length
 					} correct.`
 				);
-				const newAttempts = attempts - 1;
-				setAttempts(newAttempts);
-				if (newAttempts === 0) gameLoss();
+
+				setAttempts(attempts - 1);
+				if (attempts === 0) gameLoss();
 			}
 		} else if (item.type === "dudcap") {
 			playSound("enter");
@@ -205,13 +210,11 @@ const TerminalGame = () => {
 	};
 
 	const gameLoss = () => {
-		if (!terminalRef.current) return;
-		terminalRef.current.innerHTML = `<div id='adminalert'><div class='character-hover alert-text'>TERMINAL LOCKED</div><br />PLEASE CONTACT AN ADMINISTRATOR</div>`;
+		setGameState("loss");
 	};
 
 	const gameWin = () => {
-		if (!terminalRef.current) return;
-		terminalRef.current.innerHTML = `<div id='adminalert'><div id='msg' class='character-hover alert-text'>TERMINAL ACCESS GRANTED</div><br /><div onClick="location.href = 'https://breakout.bernis-hideout.de/pip-boy';return false;" id='proceed' class='alert-text'>PRESS HERE TO PROCEED</div></div>`;
+		setGameState("win");
 	};
 
 	let renderCallCount = 0;
@@ -265,70 +268,80 @@ const TerminalGame = () => {
 		return rows;
 	};
 
+	// #endregion
+
+	// #region Render
 	return (
-		<div className="relative w-screen h-screen overflow-hidden font-semibold bg-black text-green-400 font-mono text-[1.2rem]">
-			<div className="absolute inset-0 flex items-center justify-center">
-				<img
-					className="absolute w-full h-full object-cover z-0"
-					src="/images/monitorborder-off.png"
-					alt="Monitor Off"
-				/>
-				<div
-					className="z-11 w-full h-full bg-no-repeat bg-cover justify-center items-center gap-x-8 gap-y-3 p-40"
-					style={{
-						backgroundImage: `url(${
-							power ? "/images/bg.png" : "/images/bg-off.png"
-						})`,
-					}}
-				>
-					{power && (
-						<>
-							<div className="col-span-2">
-								<div dangerouslySetInnerHTML={{ __html: haiku }} />
-								PASSWORD REQUIRED.
-							</div>
-
-							<div className="col-span-2">
-								{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
-							</div>
-							<div className="fl">
-								<div className="w-full flex flex-row space-x-10">
-									<div>
-										{hexColumnOne.map((hex, i) => (
-											<div key={i}>{hex}</div>
-										))}
+		<>
+			{gameState === "playing" && (
+				<div className="relative w-screen h-screen overflow-hidden font-semibold bg-black text-green-400 font-mono text-[1.2rem]">
+					<div className="absolute inset-0 flex items-center justify-center">
+						<img
+							className="absolute w-full h-full object-cover z-0"
+							src="/images/monitorborder-off.png"
+							alt="Monitor Off"
+						/>
+						<div
+							className="z-11 w-full h-full bg-no-repeat bg-cover justify-center items-center gap-x-8 gap-y-3 p-40"
+							style={{
+								backgroundImage: `url(${
+									power ? "/images/bg.png" : "/images/bg-off.png"
+								})`,
+							}}
+						>
+							{power && (
+								<>
+									<div className="col-span-2">
+										<div dangerouslySetInnerHTML={{ __html: haiku }} />
+										PASSWORD REQUIRED.
 									</div>
 
-									<div>{renderColumn(wordGrid.column2)}</div>
-
-									<div>
-										{hexColumnThree.map((hex, i) => (
-											<div key={i}>{hex}</div>
-										))}
+									<div className="col-span-2">
+										{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
 									</div>
+									<div className="fl">
+										<div className="w-full flex flex-row space-x-10">
+											<div>
+												{hexColumnOne.map((hex, i) => (
+													<div key={i}>{hex}</div>
+												))}
+											</div>
 
-									<div>{renderColumn(wordGrid.column4)}</div>
+											<div>{renderColumn(wordGrid.column2)}</div>
 
-									<div className="col-span-2 space-y-1">
-										{outputLines.map((line, i) => (
-											<div key={i}>{line}</div>
-										))}
+											<div>
+												{hexColumnThree.map((hex, i) => (
+													<div key={i}>{hex}</div>
+												))}
+											</div>
+
+											<div>{renderColumn(wordGrid.column4)}</div>
+
+											<div className="col-span-2 space-y-1">
+												{outputLines.map((line, i) => (
+													<div key={i}>{line}</div>
+												))}
+											</div>
+										</div>
+										<div className="col-span-2 tracking-wider overflow-y-scroll">
+											{consoleText}▊
+										</div>
 									</div>
-								</div>
-								<div className="col-span-2 tracking-wider overflow-y-scroll">
-									{consoleText}▊
-								</div>
-							</div>
-						</>
-					)}
+								</>
+							)}
+						</div>
+						<div
+							className="absolute w-[54px] h-[50px] bottom-10 left-1/2 -translate-x-1/2 cursor-pointer z-20"
+							onClick={togglePower}
+						/>
+					</div>
 				</div>
-				<div
-					className="absolute w-[54px] h-[50px] bottom-10 left-1/2 -translate-x-1/2 cursor-pointer z-20"
-					onClick={togglePower}
-				/>
-			</div>
-		</div>
+			)}
+			{gameState === "win" && <Win />}
+			{gameState === "loss" && <Loss />}
+		</>
 	);
+	// #endregion
 };
 
 export default TerminalGame;
