@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import _ from "lodash";
 import * as settings from "./settings.js";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPowerOff } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * @description Settings imported from settings.js
@@ -39,6 +41,7 @@ const TerminalGame = () => {
 		Haikus[Math.floor(Math.random() * Haikus.length)]
 	);
 	const [gameState, setGameState] = useState("playing");
+	const [showPowerUpFx, setShowPowerUpFx] = useState(false);
 
 	// #endregion
 
@@ -63,6 +66,13 @@ const TerminalGame = () => {
 		setHexColumnThree(generateHex());
 	}, []);
 
+	useEffect(() => {
+		if (power) {
+			setShowPowerUpFx(true);
+			setTimeout(() => setShowPowerUpFx(false), 1000);
+		}
+	}, [power]);
+
 	// #endregion
 
 	// #region Functions
@@ -82,6 +92,7 @@ const TerminalGame = () => {
 	const togglePower = () => {
 		setPower((prev) => !prev);
 		playSound(power ? "poweroff" : "poweron");
+		setGameState("playing");
 	};
 
 	const initializeTerminal = () => {
@@ -288,6 +299,14 @@ const TerminalGame = () => {
 							})`,
 						}}
 					>
+						{showPowerUpFx && (
+							<div className="absolute inset-0 z-10 bg-green-400 opacity-20 animate-terminalPowerUp pointer-events-none" />
+						)}
+						{showPowerUpFx && (
+							<div className="absolute inset-0 z-20 pointer-events-none">
+								<div className="w-full h-[4px] bg-green-300 opacity-80 animate-scanlineFlash mx-auto" />
+							</div>
+						)}
 						{power && (
 							<div
 								style={{ textShadow: "0 0 5px #00ff0080, 0 0 10px #00ff0080" }}
@@ -303,7 +322,7 @@ const TerminalGame = () => {
 											{attempts} ATTEMPT(S) LEFT: {" █".repeat(attempts)}
 										</div>
 										<div className="fl">
-											<div className="w-full flex flex-row space-x-10">
+											<div className="w-full flex flex-row space-x-10 mt-4">
 												<div>
 													{hexColumnOne.map((hex, i) => (
 														<div key={i}>{hex}</div>
@@ -358,9 +377,30 @@ const TerminalGame = () => {
 						)}
 					</div>
 					<div
-						className="absolute w-[54px] h-[50px] bottom-10 left-1/2 -translate-x-1/2 cursor-pointer z-20"
+						className={`
+									absolute w-[60px] h-[60px] bottom-10 right-10 cursor-pointer z-20
+									bg-gradient-to-br from-red-800 to-red-900 
+									border border-red-950 
+									rounded-full 
+									shadow-[inset_0_0_8px_rgba(0,0,0,0.5),_0_0_8px_rgba(255,0,0,0.5)]
+									flex items-center justify-center 
+									overflow-hidden 
+									hover:brightness-110 active:scale-95 transition
+								`}
 						onClick={togglePower}
-					/>
+					>
+						<div className="absolute inset-0 pointer-events-none z-0">
+							<div className="absolute w-full h-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.05),transparent_70%)]" />
+							<div className="absolute w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(0,0,0,0.1)_4.5px,transparent_5px)] opacity-20" />
+						</div>
+						{power && (
+							<span className="absolute w-[60px] h-[60px] rounded-full bg-red-500 opacity-20 animate-ripple z-0" />
+						)}
+						<FontAwesomeIcon
+							icon={faPowerOff}
+							className="text-white text-2xl animate-pulse drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] z-10"
+						/>
+					</div>
 				</div>
 			</div>
 		</>
