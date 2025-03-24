@@ -102,11 +102,11 @@ const TerminalGame = () => {
 		setOutputLines(["> CONUNDROOM INDUSTRIES (TM)", "> ENTER PASSWORD NOW"]);
 		const shuffled = shuffle(wordList);
 		setWords(shuffled);
-		setCorrectWord(shuffled[0]);
 		buildWordColumns(shuffled);
 	};
 
 	const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
 	const updateOutput = (text) => {
 		typingQueue.current.push(`> ${text}`);
 		if (!typingRef.current) {
@@ -151,29 +151,58 @@ const TerminalGame = () => {
 
 	const buildWordColumns = (wordList) => {
 		const half = Math.floor(wordList.length / 2);
+		const maxWordsPerColumn = Math.floor(columnHeight / 4); // about 1/4 rows used
+
+		let placedWords = [];
+
 		const fillColumn = (wordsHalf) => {
 			const chars = generateGarbageCharacters();
-			const startRows = Math.floor(columnHeight / wordsHalf.length);
+			const usedRows = new Set();
 
-			for (let i = 0; i < wordsHalf.length; i++) {
-				const row = i * startRows;
-				const col = Math.floor(Math.random() * (wordColumnWidth - Difficulty));
+			// Shuffle and trim
+			const shuffled = _.shuffle(wordsHalf).slice(0, maxWordsPerColumn);
+			placedWords.push(...shuffled); // track which ones are used
+
+			for (const word of shuffled) {
+				let row;
+				let attempts = 0;
+				do {
+					row = Math.floor(Math.random() * columnHeight);
+					attempts++;
+				} while (usedRows.has(row) && attempts < 100);
+
+				if (attempts >= 100) continue;
+
+				usedRows.add(row);
+
+				const col = Math.floor(
+					Math.random() * (wordColumnWidth - Difficulty - 1)
+				);
+
 				for (let j = 0; j < Difficulty; j++) {
 					const index = row * wordColumnWidth + col + j;
 					chars[index] = {
-						char: wordsHalf[i][j],
+						char: word[j],
 						type: "word",
-						word: wordsHalf[i],
+						word,
 					};
 				}
 			}
+
 			return addDudBrackets(chars);
 		};
 
+		const col2 = fillColumn(wordList.slice(0, half));
+		const col4 = fillColumn(wordList.slice(half));
+
 		setWordGrid({
-			column2: fillColumn(wordList.slice(0, half)),
-			column4: fillColumn(wordList.slice(half)),
+			column2: col2,
+			column4: col4,
 		});
+
+		const randomCorrect =
+			placedWords[Math.floor(Math.random() * placedWords.length)];
+		setCorrectWord(randomCorrect);
 	};
 
 	const generateGarbageCharacters = () => {
@@ -230,7 +259,7 @@ const TerminalGame = () => {
 				gameWin();
 			} else {
 				playSound("passbad");
-				updateOutput("Access denied");
+				updateOutput("Access denied.");
 				updateOutput(
 					`${compareWords(item.word, correctWord)}/${
 						correctWord.length
@@ -259,12 +288,24 @@ const TerminalGame = () => {
 		return first.split("").filter((c, i) => c === second[i]).length;
 	};
 
-	const gameLoss = () => {
-		setGameState("loss");
+	const gameWin = () => {
+		setShowPowerUpFx(true);
+		setTimeout(() => {
+			setShowPowerUpFx(false);
+			setGameState("win");
+			updateOutput("ACCESS GRANTED.");
+			updateOutput("PASSWORD IS: 69.");
+		}, 200);
 	};
 
-	const gameWin = () => {
-		setGameState("win");
+	const gameLoss = () => {
+		setShowPowerUpFx(true);
+		setTimeout(() => {
+			setShowPowerUpFx(false);
+			setGameState("loss");
+			updateOutput("TERMINAL LOCKED.");
+			updateOutput("PLEASE CONTACT AN ADMINISTRATOR.");
+		}, 200);
 	};
 
 	let renderCallCount = 0;
@@ -353,7 +394,7 @@ const TerminalGame = () => {
 								{gameState === "playing" && (
 									<>
 										<div className="col-span-2">
-											<div dangerouslySetInnerHTML={{ __html: haiku }} />
+											{/* <div dangerouslySetInnerHTML={{ __html: haiku }} /> */}
 											PASSWORD REQUIRED.
 										</div>
 
@@ -398,10 +439,12 @@ const TerminalGame = () => {
 											textShadow: "0 0 5px #00ff0080, 0 0 10px #00ff0080",
 										}}
 									>
-										<div>ACCESS GRANTED.</div>
-										<div>PASSWORD IS: 69.</div>
+										{outputLines.slice(-2).map((line, i) => (
+											<div key={`win-line-${i}`}>{line}</div>
+										))}
 									</div>
 								)}
+
 								{gameState === "loss" && (
 									<div
 										className="flex flex-col w-full text-center"
@@ -409,8 +452,9 @@ const TerminalGame = () => {
 											textShadow: "0 0 5px #00ff0080, 0 0 10px #00ff0080",
 										}}
 									>
-										<div>TERMINAL LOCKED.</div>
-										<div>PLEASE CONTACT AN ADMINISTRATOR.</div>
+										{outputLines.slice(-2).map((line, i) => (
+											<div key={`loss-line-${i}`}>{line}</div>
+										))}
 									</div>
 								)}
 							</div>
