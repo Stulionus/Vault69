@@ -159,9 +159,9 @@ const TerminalGame = () => {
 			const chars = generateGarbageCharacters();
 			const usedRows = new Set();
 
-			// Shuffle and trim
 			const shuffled = _.shuffle(wordsHalf).slice(0, maxWordsPerColumn);
-			placedWords.push(...shuffled); // track which ones are used
+
+			placedWords.push(...shuffled);
 
 			for (const word of shuffled) {
 				let row;
@@ -203,6 +203,7 @@ const TerminalGame = () => {
 		const randomCorrect =
 			placedWords[Math.floor(Math.random() * placedWords.length)];
 		setCorrectWord(randomCorrect);
+		console.log("Correct word:", randomCorrect);
 	};
 
 	const generateGarbageCharacters = () => {
